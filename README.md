@@ -6,7 +6,17 @@ Currently, the following drains are provided:
 
 * L2Met: An adapter that logs metrics in l2met format. This is useful if you're using something like logspout to collect all logs from containers and send them to l2met.
 
-# Metrics
+## Usage
+
+Simply run the container and mount the docker socket:
+
+```console
+$ docker run --name="stat" \
+    --volume=/var/run/docker.sock:/tmp/docker.sock \
+    remind101/stat
+```
+
+## Metrics
 
 The following metrics will be created:
 
