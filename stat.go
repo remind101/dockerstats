@@ -24,7 +24,7 @@ type Stat struct {
 	Drain
 
 	mu         sync.Mutex
-	containers map[string]chan *docker.Stats
+	containers map[string]*docker.Container
 	client     *docker.Client
 }
 
@@ -36,7 +36,8 @@ func New(host string) (*Stat, error) {
 	}
 
 	return &Stat{
-		client: c,
+		client:     c,
+		containers: make(map[string]*docker.Container),
 	}, nil
 }
 
@@ -72,19 +73,25 @@ func (s *Stat) Run() error {
 
 func (s *Stat) start(containerID string) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 
 	if _, ok := s.containers[containerID]; ok {
 		// We're already watching metrics from this container. Nothing
 		// to do.
+		s.mu.Unlock()
 		return
 	}
 
 	container, err := s.client.InspectContainer(containerID)
 	if err != nil {
 		debug("inspect: err: %s", err)
+		s.mu.Unlock()
 		return
 	}
+
+	s.containers[containerID] = container
+	s.mu.Unlock()
+
+	debug("draining: %s", container.Name)
 
 	stats := make(chan *docker.Stats)
 	go func() {
@@ -94,7 +101,6 @@ func (s *Stat) start(containerID string) {
 		}); err != nil {
 			debug("stats: err: %s", err)
 		}
-		close(stats)
 	}()
 
 	for stat := range stats {
@@ -108,8 +114,8 @@ func (s *Stat) stop(containerID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if ch, ok := s.containers[containerID]; ok {
-		close(ch)
+	if container, ok := s.containers[containerID]; ok {
+		debug("stopping: %s", container.Name)
 	}
 }
 
@@ -122,5 +128,5 @@ func (s *Stat) drain(container *docker.Container, stats *docker.Stats) error {
 }
 
 func debug(format string, v ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, v...)
+	fmt.Fprintf(os.Stderr, format+"\n", v...)
 }
