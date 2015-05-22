@@ -1,6 +1,6 @@
 # Dockerstats
 
-Dockerstats is a simple docker container for collecting metrics from the [Docker Stats](https://docs.docker.com/reference/api/docker_remote_api_v1.17/#get-container-stats-based-on-resource-usage) API and sending them elsewhere. It supports adapters for configuring where you want metrics to be sent. It's heaviliy inspired by [logspout](https://github.com/gliderlabs/logspout).
+Dockerstats is a simple docker container for collecting metrics from the [Docker Stats](https://docs.docker.com/reference/api/docker_remote_api_v1.17/#get-container-stats-based-on-resource-usage) API and sending them elsewhere. It supports adapters for configuring where you want metrics to be sent. It's heavily inspired by [logspout](https://github.com/gliderlabs/logspout) and is roughly similar to [cadvisor](https://github.com/google/cadvisor) but simpler.
 
 Currently, the following adapters are provided:
 
