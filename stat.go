@@ -1,4 +1,4 @@
-// package stat is a Go program for watching the container stats endpoint in the
+// Package stat is a Go program for watching the container stats endpoint in the
 // docker api and shuttling the metrics somwhere else where they belong.
 // Basically logspout for container metrics.
 package stat // import "github.com/remind101/stat"
@@ -18,8 +18,8 @@ type Stats struct {
 	Container *docker.Container
 }
 
-// Drain is an interface for draining metrics somewhere.
-type Drain interface {
+// Adapter is an interface for draining metrics somewhere.
+type Adapter interface {
 	Drain(*Stats) error
 }
 
@@ -27,7 +27,7 @@ type Drain interface {
 // watches for container start, restart and stop events and streams metrics to a
 // Drain.
 type Stat struct {
-	Drain
+	Adapter
 
 	mu         sync.Mutex
 	containers map[string]*docker.Container
@@ -47,7 +47,7 @@ func New(host string) (*Stat, error) {
 	}, nil
 }
 
-// Start begins starts draining metrics from all of the currently running
+// Run begins starts draining metrics from all of the currently running
 // containers and starts watching for new containers to drain metrics from. This
 // call is blocking.
 func (s *Stat) Run() error {
@@ -126,11 +126,11 @@ func (s *Stat) stop(containerID string) {
 }
 
 func (s *Stat) drain(container *docker.Container, stats *docker.Stats) error {
-	if s.Drain == nil {
+	if s.Adapter == nil {
 		return nil
 	}
 
-	return s.Drain.Drain(&Stats{
+	return s.Adapter.Drain(&Stats{
 		Stats:     stats,
 		Container: container,
 	})

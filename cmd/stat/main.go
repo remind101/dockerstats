@@ -13,7 +13,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	stats.Drain = &stat.L2MetDrain{}
+	stats.Adapter = &stat.LogAdapter{}
 
 	if err := stats.Run(); err != nil {
 		log.Fatal(err)

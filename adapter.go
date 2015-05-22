@@ -7,10 +7,10 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
-// L2MetDrain is a drain that drains the metrics to stdout in l2met format.
-type L2MetDrain struct{}
+// LogAdapter is a drain that drains the metrics to stdout in l2met format.
+type LogAdapter struct{}
 
-func (d *L2MetDrain) Drain(stats *Stats) error {
+func (*LogAdapter) Drain(stats *Stats) error {
 	w := &l2metWriter{container: stats.Container}
 
 	// Network
