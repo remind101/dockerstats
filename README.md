@@ -76,3 +76,4 @@ CPUStats.ThrottlingData.ThrottledTime
 
 * Support `text/template` via environment variables for the source in l2met output.
 * Add a statsd drain.
+* BlkioStats
