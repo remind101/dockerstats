@@ -76,5 +76,5 @@ type l2metWriter struct {
 }
 
 func (w *l2metWriter) write(name string, value interface{}) {
-	fmt.Printf("%s=%v source=%s\n", name, value, w.container.Name)
+	fmt.Printf("sample#%s=%v source=%s\n", name, value, w.container.Name)
 }

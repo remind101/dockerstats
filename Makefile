@@ -1,4 +1,4 @@
-.PHONY: cmd
+.PHONY: cmd build
 
 cmd:
 	godep go build -o build/stat ./cmd/stat
