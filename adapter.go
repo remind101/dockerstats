@@ -1,17 +1,31 @@
 package stat
 
 import (
+	"bytes"
 	"fmt"
-	"strings"
+	"text/template"
 
 	"github.com/fsouza/go-dockerclient"
 )
 
-// LogAdapter is a drain that drains the metrics to stdout in l2met format.
-type LogAdapter struct{}
+// L2MetTemplate is a text/template for outputing metrics as l2met samples.
+var L2MetTemplate = template.Must(template.New("l2met").Parse(
+	"sample#{{.Name}}={{.Value}} source={{.Container.Name}}",
+))
 
-func (*LogAdapter) Drain(stats *Stats) error {
-	w := &l2metWriter{container: stats.Container}
+// LogAdapter is a drain that drains the metrics to stdout in l2met format.
+type LogAdapter struct {
+	Template *template.Template
+}
+
+func NewL2MetAdapter() *LogAdapter {
+	return &LogAdapter{
+		Template: L2MetTemplate,
+	}
+}
+
+func (a *LogAdapter) Drain(stats *Stats) error {
+	w := &l2metWriter{template: a.Template, container: stats.Container}
 
 	// Network
 	w.write("Network.RxDropped", stats.Network.RxDropped)
@@ -72,10 +86,30 @@ func (*LogAdapter) Drain(stats *Stats) error {
 	return nil
 }
 
+// stat represents a single stat and is provided as the context to a
+// template.
+type stat struct {
+	Container *docker.Container
+	Name      string
+	Value     interface{}
+}
+
 type l2metWriter struct {
+	template  *template.Template
 	container *docker.Container
 }
 
 func (w *l2metWriter) write(name string, value interface{}) {
-	fmt.Printf("sample#%s=%v source=%s\n", name, value, strings.Replace(w.container.Name, "/", "", -1))
+	b := new(bytes.Buffer)
+	data := stat{
+		Container: w.container,
+		Name:      name,
+		Value:     value,
+	}
+
+	if err := w.template.Execute(b, data); err != nil {
+		panic(err)
+	}
+
+	fmt.Println(b.String())
 }

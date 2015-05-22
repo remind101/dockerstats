@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/fsouza/go-dockerclient"
@@ -93,6 +94,7 @@ func (s *Stat) start(containerID string) {
 		s.mu.Unlock()
 		return
 	}
+	container.Name = strings.Replace(container.Name, "/", "", 1)
 
 	s.containers[containerID] = container
 	s.mu.Unlock()
