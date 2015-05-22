@@ -1,4 +1,9 @@
-FROM remind101/go:1.4
+FROM alpine:3.1
 MAINTAINER Eric Holmes <eric@remind101.com>
 
-CMD ["/go/bin/stats"]
+COPY ./ /go/src/github.com/remind101/dockerstats
+COPY ./bin/build /build
+RUN /build
+WORKDIR /go/src/github.com/remind101/dockerstats
+
+CMD ["stats"]
