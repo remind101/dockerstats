@@ -2,7 +2,6 @@ package stat
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/fsouza/go-dockerclient"
 )
@@ -69,46 +68,13 @@ func (d *L2MetDrain) Drain(container *docker.Container, stats *docker.Stats) err
 	w.write("CPUStats.ThrottlingData.ThrottledPeriods", stats.CPUStats.ThrottlingData.ThrottledPeriods)
 	w.write("CPUStats.ThrottlingData.ThrottledTime", stats.CPUStats.ThrottlingData.ThrottledTime)
 
-	w.flush()
-
 	return nil
 }
 
-type metric struct {
-	name  string
-	value interface{}
-}
-
 type l2metWriter struct {
-	idx       int
-	buf       []*metric
 	container *docker.Container
 }
 
 func (w *l2metWriter) write(name string, value interface{}) {
-	if w.idx < 4 {
-		w.buf = append(w.buf, &metric{name, value})
-		w.idx = w.idx + 1
-	} else {
-		w.flush()
-	}
-}
-
-func (w *l2metWriter) flush() {
-	defer w.reset()
-
-	if len(w.buf) == 0 {
-		return
-	}
-
-	var p []string
-	for _, m := range w.buf {
-		p = append(p, fmt.Sprintf("%s=%v", m.name, m.value))
-	}
-	fmt.Printf("%s source=%s\n", strings.Join(p, " "), w.container.Name)
-}
-
-func (w *l2metWriter) reset() {
-	w.idx = 0
-	w.buf = nil
+	fmt.Printf("%s=%v source=%s\n", name, value, w.container.Name)
 }
