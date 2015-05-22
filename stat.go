@@ -12,9 +12,15 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
+// Stats represents a set of stats from a container at a given point in time.
+type Stats struct {
+	*docker.Stats
+	Container *docker.Container
+}
+
 // Drain is an interface for draining metrics somewhere.
 type Drain interface {
-	Drain(*docker.Container, *docker.Stats) error
+	Drain(*Stats) error
 }
 
 // Stat is a context struct that manages the lifecycle of container metrics. It
@@ -124,7 +130,10 @@ func (s *Stat) drain(container *docker.Container, stats *docker.Stats) error {
 		return nil
 	}
 
-	return s.Drain.Drain(container, stats)
+	return s.Drain.Drain(&Stats{
+		Stats:     stats,
+		Container: container,
+	})
 }
 
 func debug(format string, v ...interface{}) {

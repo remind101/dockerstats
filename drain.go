@@ -10,8 +10,8 @@ import (
 // L2MetDrain is a drain that drains the metrics to stdout in l2met format.
 type L2MetDrain struct{}
 
-func (d *L2MetDrain) Drain(container *docker.Container, stats *docker.Stats) error {
-	w := &l2metWriter{container: container}
+func (d *L2MetDrain) Drain(stats *Stats) error {
+	w := &l2metWriter{container: stats.Container}
 
 	// Network
 	w.write("Network.RxDropped", stats.Network.RxDropped)
