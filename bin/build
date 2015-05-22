@@ -1,0 +1,15 @@
+#!/bin/sh
+
+echo "@edge http://dl-4.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+packages="curl git go@edge"
+
+apk add --update curl git go@edge
+
+export GOPATH=/go
+go get github.com/tools/godep
+cd /go/src/github.com/remind101/dockerstats
+/go/bin/godep go install github.com/remind101/dockerstats/cmd/stats
+mv /go/bin/stats /bin
+
+apk del curl git go
+rm -rf /var/cache/apk/*
