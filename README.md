@@ -1,6 +1,6 @@
-# Stat
+# Dockerstats
 
-Stat is a simple docker container for collecting metrics from the [Docker Stats](https://docs.docker.com/reference/api/docker_remote_api_v1.17/#get-container-stats-based-on-resource-usage) API and sending them elsewhere. It supports adapters called `Drains` for configuring where you want metrics to be sent.
+Dockerstats is a simple docker container for collecting metrics from the [Docker Stats](https://docs.docker.com/reference/api/docker_remote_api_v1.17/#get-container-stats-based-on-resource-usage) API and sending them elsewhere. It supports adapters called `Drains` for configuring where you want metrics to be sent.
 
 Currently, the following drains are provided:
 
@@ -11,9 +11,9 @@ Currently, the following drains are provided:
 Simply run the container and mount the docker socket:
 
 ```console
-$ docker run --name="stat" \
+$ docker run --name="dockerstats" \
     --volume=/var/run/docker.sock:/tmp/docker.sock \
-    remind101/stat
+    remind101/dockerstats
 ```
 
 ## Metrics
