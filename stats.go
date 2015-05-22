@@ -1,7 +1,7 @@
 // Package stat is a Go program for watching the container stats endpoint in the
 // docker api and shuttling the metrics somwhere else where they belong.
 // Basically logspout for container metrics.
-package stat // import "github.com/remind101/stat"
+package stats // import "github.com/remind101/dockerstats"
 
 import (
 	"errors"
