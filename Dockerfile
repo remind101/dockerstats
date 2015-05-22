@@ -6,4 +6,4 @@ COPY ./bin/build /build
 RUN /build
 WORKDIR /go/src/github.com/remind101/dockerstats
 
-CMD ["stats"]
+ENTRYPOINT ["stats"]
