@@ -4,7 +4,7 @@ Stat is a simple docker container for collecting metrics from the [Docker Stats]
 
 Currently, the following drains are provided:
 
-* L2Met: An adapter that logs metrics in l2met format. This is useful if you're using something like logspout to collect all logs from containers and send them to l2met.
+* **L2Met**: An adapter that logs metrics in l2met format. This is useful if you're using something like logspout to collect all logs from containers and send them to l2met.
 
 ## Usage
 
@@ -71,3 +71,8 @@ CPUStats.ThrottlingData.Periods
 CPUStats.ThrottlingData.ThrottledPeriods
 CPUStats.ThrottlingData.ThrottledTime
 ```
+
+## Roadmap
+
+* Support `text/template` via environment variables for the source in l2met output.
+* Add a statsd drain.
