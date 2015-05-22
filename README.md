@@ -4,7 +4,9 @@ Dockerstats is a simple docker container for collecting metrics from the [Docker
 
 Currently, the following drains are provided:
 
-* **LogAdapter**: An adapter that logs stats to stdout. The format can be configured via the `STAT_TEMPLATE` environment variable. The default template is a template that will log stats in [l2met](https://github.com/ryandotsmith/l2met/wiki/Usage#logging-convention) format.
+* **Log**: An adapter that logs stats to stdout. The format can be configured via the `STAT_TEMPLATE` environment variable. The default template is a template that will log stats in [l2met](https://github.com/ryandotsmith/l2met/wiki/Usage#logging-convention) format.
+* **Statsd**: _TODO_
+* **Librato**: _TODO_
 
 ## Usage
 
