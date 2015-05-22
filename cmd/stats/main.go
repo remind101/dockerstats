@@ -13,7 +13,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	stat.Adapter = stats.NewL2MetAdapter()
+	a, err := stats.NewLogAdapter(os.Getenv("STAT_TEMPLATE"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	stat.Adapter = a
 
 	if err := stat.Run(); err != nil {
 		log.Fatal(err)

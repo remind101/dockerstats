@@ -8,20 +8,29 @@ import (
 	"github.com/fsouza/go-dockerclient"
 )
 
-// L2MetTemplate is a text/template for outputing metrics as l2met samples.
-var L2MetTemplate = template.Must(template.New("l2met").Parse(
-	"sample#{{.Name}}={{.Value}} source={{.Container.Name}}",
-))
+// L2MetTemplate is a template for outputing metrics as l2met samples.
+var L2MetTemplate = "sample#{{.Name}}={{.Value}} source={{.Container.Name}}"
 
 // LogAdapter is a drain that drains the metrics to stdout in l2met format.
 type LogAdapter struct {
 	Template *template.Template
 }
 
-func NewL2MetAdapter() *LogAdapter {
-	return &LogAdapter{
-		Template: L2MetTemplate,
+// NewLogAdapter parses the template string as a text/template and returns a new
+// LogAdapter instance.
+func NewLogAdapter(tmpl string) (*LogAdapter, error) {
+	if tmpl == "" {
+		tmpl = L2MetTemplate
 	}
+
+	t, err := template.New("stat").Parse(tmpl)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LogAdapter{
+		Template: t,
+	}, nil
 }
 
 func (a *LogAdapter) Drain(stats *Stats) error {
