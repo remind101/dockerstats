@@ -1,0 +1,4 @@
+stat:
+  build: ./
+  environment:
+    DOCKER_HOST:
