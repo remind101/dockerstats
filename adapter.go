@@ -9,7 +9,7 @@ import (
 )
 
 // L2MetTemplate is a template for outputing metrics as l2met samples.
-var L2MetTemplate = "sample#{{.Name}}={{.Value}} source={{.Container.Config.Hostname}}.{{.Container.Name}}"
+var L2MetTemplate = "sample#{{.Name}}={{.Value}} source={{.Container.Name}}.{{.Container.Config.Hostname}}"
 
 // LogAdapter is a drain that drains the metrics to stdout in l2met format.
 type LogAdapter struct {
