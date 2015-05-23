@@ -668,8 +668,9 @@ func (c *Client) Stats(opts StatsOptions) (retErr error) {
 
 	go func() {
 		err := c.stream("GET", fmt.Sprintf("/containers/%s/stats", opts.ID), streamOptions{
-			rawJSONStream: true,
-			stdout:        writeCloser,
+			setRawTerminal: true,
+			rawJSONStream:  true,
+			stdout:         writeCloser,
 		})
 		if err != nil {
 			dockerError, ok := err.(*Error)
