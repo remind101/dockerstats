@@ -376,6 +376,11 @@ func (c *Client) stream(method, path string, streamOptions streamOptions) error 
 	for key, val := range streamOptions.headers {
 		req.Header.Set(key, val)
 	}
+
+	q := req.URL.Query()
+	q.Set("stream", "true")
+	req.URL.RawQuery = q.Encode()
+
 	var resp *http.Response
 	protocol := c.endpointURL.Scheme
 	address := c.endpointURL.Path
