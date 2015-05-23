@@ -3,13 +3,20 @@ package stats
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"text/template"
 
 	"github.com/fsouza/go-dockerclient"
 )
 
 // L2MetTemplate is a template for outputing metrics as l2met samples.
-var L2MetTemplate = "sample#{{.Name}}={{.Value}} source={{.Container.Name}}.{{.Container.Config.Hostname}}"
+var L2MetTemplate = "sample#{{.Name}}={{.Value}} source={{.Container.Name}}.{{.Hostname}}"
+
+var hostname string
+
+func init() {
+	hostname, _ = os.Hostname()
+}
 
 // LogAdapter is a drain that drains the metrics to stdout in l2met format.
 type LogAdapter struct {
@@ -101,6 +108,10 @@ type stat struct {
 	Container *docker.Container
 	Name      string
 	Value     interface{}
+}
+
+func (s stat) Hostname() string {
+	return hostname
 }
 
 type l2metWriter struct {
