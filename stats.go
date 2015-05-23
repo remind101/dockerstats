@@ -9,9 +9,14 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/fsouza/go-dockerclient"
 )
+
+// DefaultResolution defines the default resolution for draining stats. We
+// default to 10 seconds.
+var DefaultResolution = 10
 
 // Stats represents a set of stats from a container at a given point in time.
 type Stats struct {
@@ -28,7 +33,14 @@ type Adapter interface {
 // watches for container start, restart and stop events and streams metrics to a
 // Drain.
 type Stat struct {
+	// Adapter is the Adapter that will be used to drain Stats.
 	Adapter
+
+	// Resolution defines how often stats will be sent to the adapter to be
+	// drained. Any stats received from the docker daemon before the next
+	// tick will be dropped. Throttling is on a per container basis. The
+	// zero value is DefaultResolution.
+	Resolution int
 
 	mu         sync.Mutex
 	containers map[string]*docker.Container
@@ -111,9 +123,18 @@ func (s *Stat) start(containerID string) {
 		}
 	}()
 
+	ticker := newTicker(s.Resolution)
+
 	for stat := range stats {
-		if err := s.drain(container, stat); err != nil {
-			debug("drain: err: %s", err)
+		// We select on the ticker channel. If a tick event isn't ready, we'll
+		// return which will drop this stats message.
+		select {
+		case <-ticker.C:
+			if err := s.drain(container, stat); err != nil {
+				debug("drain: err: %s", err)
+			}
+		default:
+			// Drop the stat.
 		}
 	}
 }
@@ -136,6 +157,14 @@ func (s *Stat) drain(container *docker.Container, stats *docker.Stats) error {
 		Stats:     stats,
 		Container: container,
 	})
+}
+
+func newTicker(resolution int) *time.Ticker {
+	if resolution == 0 {
+		resolution = DefaultResolution
+	}
+
+	return time.NewTicker(time.Duration(resolution) * time.Second)
 }
 
 func debug(format string, v ...interface{}) {
