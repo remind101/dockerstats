@@ -11,7 +11,7 @@ import (
 )
 
 // L2MetTemplate is a template for outputing metrics as l2met samples.
-var L2MetTemplate = `sample#{{.Name}}={{.Value}} source={{.Env "SOURCE"}}.{{.ID}}.{{.Hostname}}`
+var L2MetTemplate = `sample#{{.Name}}={{.Value}} source={{.Container.Name}}.{{.Hostname}}`
 
 var hostname string
 
