@@ -4,13 +4,14 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 	"text/template"
 
 	"github.com/fsouza/go-dockerclient"
 )
 
 // L2MetTemplate is a template for outputing metrics as l2met samples.
-var L2MetTemplate = "sample#{{.Name}}={{.Value}} source={{.Container.Name}}.{{.Hostname}}"
+var L2MetTemplate = `sample#{{.Name}}={{.Value}} source={{.Env "SOURCE"}}.{{.ID}}.{{.Hostname}}`
 
 var hostname string
 
@@ -117,6 +118,15 @@ func (s stat) Hostname() string {
 // Returns the first 12 characters of the container ID.
 func (s stat) ID() string {
 	return s.Container.ID[:12]
+}
+
+func (s stat) Env(key string) string {
+	for _, env := range s.Container.Config.Env {
+		if strings.HasPrefix(env, key+"=") {
+			return env[len(key)+1:]
+		}
+	}
+	return ""
 }
 
 type l2metWriter struct {
