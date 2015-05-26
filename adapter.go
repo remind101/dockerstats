@@ -114,6 +114,11 @@ func (s stat) Hostname() string {
 	return hostname
 }
 
+// Returns the first 12 characters of the container ID.
+func (s stat) ID() string {
+	return s.Container.ID[:12]
+}
+
 type l2metWriter struct {
 	template  *template.Template
 	container *docker.Container
