@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
+	"github.com/remind101/empire/pkg/dockerutil"
 )
 
 // DefaultResolution defines the default resolution for draining stats. We
@@ -48,8 +49,8 @@ type Stat struct {
 }
 
 // New returns a new Stat instance with a configured docker client.
-func New(host string) (*Stat, error) {
-	c, err := docker.NewClient(host)
+func New() (*Stat, error) {
+	c, err := dockerutil.NewDockerClientFromEnv()
 	if err != nil {
 		return nil, err
 	}
