@@ -1,13 +1,44 @@
 {
-	"ImportPath": "github.com/remind101/stat",
-	"GoVersion": "go1.4.1",
+	"ImportPath": "github.com/remind101/dockerstats",
+	"GoVersion": "go1.4.2",
 	"Packages": [
 		"./..."
 	],
 	"Deps": [
 		{
+			"ImportPath": "code.google.com/p/go-uuid/uuid",
+			"Comment": "null-12",
+			"Rev": "7dda39b2e7d5e265014674c5af696ba4186679e9"
+		},
+		{
+			"ImportPath": "github.com/codegangsta/cli",
+			"Comment": "1.2.0-26-gf7ebb76",
+			"Rev": "f7ebb761e83e21225d1d8954fde853bf8edd46c4"
+		},
+		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
 			"Rev": "b0f4fa94c14794e30cf3b9176e5dc4725d9552ed"
+		},
+		{
+			"ImportPath": "github.com/remind101/empire/pkg/dockerutil",
+			"Comment": "v0.9.0-137-g88b09a4",
+			"Rev": "88b09a48f32fe8c990b8a922b4c3aaeb1fd013ad"
+		},
+		{
+			"ImportPath": "github.com/remind101/pkg/logger",
+			"Rev": "835283e5cf4be4a19295819879cc5259718ec075"
+		},
+		{
+			"ImportPath": "github.com/remind101/pkg/reporter",
+			"Rev": "835283e5cf4be4a19295819879cc5259718ec075"
+		},
+		{
+			"ImportPath": "github.com/remind101/pkg/trace",
+			"Rev": "835283e5cf4be4a19295819879cc5259718ec075"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "1dfe7915deaf3f80b962c163b918868d8a6d8974"
 		}
 	]
 }
