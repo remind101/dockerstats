@@ -1,0 +1,8 @@
+language: go
+go:
+  - 1.4
+install:
+  - export PATH=$PATH:$HOME/gopath/bin
+  - go get -v -u github.com/tools/godep
+script:
+  - godep go test ./...
