@@ -95,6 +95,7 @@ func (s *Stat) Run() error {
 		container, err := s.addContainer(event.ID)
 		if err != nil {
 			debug("add container: err: %s", err)
+			continue
 		}
 
 		go s.event(container, event)
