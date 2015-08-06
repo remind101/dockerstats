@@ -19,6 +19,28 @@ import (
 // default to 10 seconds.
 var DefaultResolution = 10
 
+var eventList = map[string]bool{
+	// Events that should be handled.
+	"create":      true,
+	"destroy":     true,
+	"die":         true,
+	"exec_create": true,
+	"exec_start":  true,
+	"export":      true,
+	"kill":        true,
+	"oom":         true,
+	"pause":       true,
+	"restart":     true,
+	"start":       true,
+	"stop":        true,
+	"unpause":     true,
+
+	// Events that should not be handled
+	// See https://docs.docker.com/reference/api/docker_remote_api_v1.19/#monitor-docker-s-events
+	"untag":  false,
+	"delete": false,
+}
+
 // Stats represents a set of stats from a container at a given point in time.
 type Stats struct {
 	*docker.Stats
@@ -92,6 +114,11 @@ func (s *Stat) Run() error {
 	}
 
 	for event := range events {
+		// Ignore events that are not whitelisted.
+		if !eventList[event.Status] {
+			continue
+		}
+
 		container, err := s.addContainer(event.ID)
 		if err != nil {
 			debug("add container: err: %s", err)
