@@ -132,6 +132,12 @@ func (s *Stat) addContainer(containerID string) (*docker.Container, error) {
 }
 
 func (s *Stat) attachMetrics(container *docker.Container) {
+	defer func() {
+		if v := recover(); v != nil {
+			debug("recovered panic in attachMetrics: %v", v)
+		}
+	}()
+
 	debug("draining: %s", container.Name)
 
 	stats := make(chan *docker.Stats)
