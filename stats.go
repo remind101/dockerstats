@@ -19,13 +19,6 @@ import (
 // default to 10 seconds.
 var DefaultResolution = 10
 
-// whitelistedEvents not in this list will be ignored.
-var whitelistedEvents = map[string]bool{
-	"start":   true,
-	"restart": true,
-	"die":     true,
-}
-
 // Stats represents a set of stats from a container at a given point in time.
 type Stats struct {
 	*docker.Stats
@@ -99,11 +92,6 @@ func (s *Stat) Run() error {
 	}
 
 	for event := range events {
-		// Ingore events not in the whitelist.
-		if !whitelistedEvents[event.Status] {
-			continue
-		}
-
 		container, err := s.addContainer(event.ID)
 		if err != nil {
 			debug("add container: err: %s", err)
