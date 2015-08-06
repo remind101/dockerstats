@@ -41,7 +41,11 @@ func NewLogAdapter(tmpl string) (*LogAdapter, error) {
 	}, nil
 }
 
-func (a *LogAdapter) Drain(stats *Stats) error {
+func (a *LogAdapter) Event(event *Event) error {
+	return nil
+}
+
+func (a *LogAdapter) Stats(stats *Stats) error {
 	w := &l2metWriter{template: a.Template, container: stats.Container}
 
 	// Network

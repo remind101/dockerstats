@@ -25,16 +25,23 @@ type Stats struct {
 	Container *docker.Container
 }
 
-// Adapter is an interface for draining metrics somewhere.
+// Event represents an event for a container.
+type Event struct {
+	*docker.APIEvents
+	Container *docker.Container
+}
+
+// Adapter is an interface for draining stats and events somewhere.
 type Adapter interface {
-	Drain(*Stats) error
+	Stats(*Stats) error
+	Event(*Event) error
 }
 
 // Stat is a context struct that manages the lifecycle of container metrics. It
 // watches for container start, restart and stop events and streams metrics to a
 // Drain.
 type Stat struct {
-	// Adapter is the Adapter that will be used to drain Stats.
+	// Adapter is the Adapter that will be used to drain Stats and Events.
 	Adapter
 
 	// Resolution defines how often stats will be sent to the adapter to be
@@ -61,9 +68,9 @@ func New() (*Stat, error) {
 	}, nil
 }
 
-// Run begins starts draining metrics from all of the currently running
-// containers and starts watching for new containers to drain metrics from. This
-// call is blocking.
+// Run begins starts draining metrics and events from all of the currently
+// running containers and starts watching for new containers to drain metrics
+// and events from. This call is blocking.
 func (s *Stat) Run() error {
 	containers, err := s.client.ListContainers(docker.ListContainersOptions{})
 	if err != nil {
@@ -131,8 +138,8 @@ func (s *Stat) start(containerID string) {
 		// return which will drop this stats message.
 		select {
 		case <-ticker.C:
-			if err := s.drain(container, stat); err != nil {
-				debug("drain: err: %s", err)
+			if err := s.stats(container, stat); err != nil {
+				debug("stats: err: %s", err)
 			}
 		default:
 			// Drop the stat.
@@ -149,12 +156,12 @@ func (s *Stat) stop(containerID string) {
 	}
 }
 
-func (s *Stat) drain(container *docker.Container, stats *docker.Stats) error {
+func (s *Stat) stats(container *docker.Container, stats *docker.Stats) error {
 	if s.Adapter == nil {
 		return nil
 	}
 
-	return s.Adapter.Drain(&Stats{
+	return s.Adapter.Stats(&Stats{
 		Stats:     stats,
 		Container: container,
 	})
