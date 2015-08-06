@@ -19,6 +19,13 @@ import (
 // default to 10 seconds.
 var DefaultResolution = 10
 
+// whitelistedEvents not in this list will be ignored.
+var whitelistedEvents = map[string]bool{
+	"start":   true,
+	"restart": true,
+	"die":     true,
+}
+
 // Stats represents a set of stats from a container at a given point in time.
 type Stats struct {
 	*docker.Stats
@@ -78,7 +85,12 @@ func (s *Stat) Run() error {
 	}
 
 	for _, c := range containers {
-		go s.start(c.ID)
+		container, err := s.addContainer(c.ID)
+		if err != nil {
+			return err
+		}
+
+		go s.attachMetrics(container)
 	}
 
 	events := make(chan *docker.APIEvents)
@@ -87,44 +99,56 @@ func (s *Stat) Run() error {
 	}
 
 	for event := range events {
+		// Ingore events not in the whitelist.
+		if !whitelistedEvents[event.Status] {
+			continue
+		}
+
+		container, err := s.addContainer(event.ID)
+		if err != nil {
+			debug("add container: err: %s", err)
+		}
+
+		go s.event(container, event)
+
 		switch event.Status {
 		case "start", "restart":
-			go s.start(event.ID)
-		case "die":
-			go s.stop(event.ID)
+			go s.attachMetrics(container)
 		}
 	}
 
 	return errors.New("unexpected stop")
 }
 
-func (s *Stat) start(containerID string) {
+// addContainer adds the container to the internal map of known containers.
+func (s *Stat) addContainer(containerID string) (*docker.Container, error) {
 	s.mu.Lock()
+	defer s.mu.Unlock()
 
-	if _, ok := s.containers[containerID]; ok {
-		// We're already watching metrics from this container. Nothing
-		// to do.
-		s.mu.Unlock()
-		return
+	if container, ok := s.containers[containerID]; ok {
+		// We already know about this container.
+		return container, nil
 	}
 
 	container, err := s.client.InspectContainer(containerID)
 	if err != nil {
 		debug("inspect: err: %s", err)
-		s.mu.Unlock()
-		return
+		return container, err
 	}
 	container.Name = strings.Replace(container.Name, "/", "", 1)
 
 	s.containers[containerID] = container
-	s.mu.Unlock()
 
+	return container, nil
+}
+
+func (s *Stat) attachMetrics(container *docker.Container) {
 	debug("draining: %s", container.Name)
 
 	stats := make(chan *docker.Stats)
 	go func() {
 		if err := s.client.Stats(docker.StatsOptions{
-			ID:    containerID,
+			ID:    container.ID,
 			Stats: stats,
 		}); err != nil {
 			debug("stats: err: %s", err)
@@ -147,24 +171,26 @@ func (s *Stat) start(containerID string) {
 	}
 }
 
-func (s *Stat) stop(containerID string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if container, ok := s.containers[containerID]; ok {
-		debug("stopping: %s", container.Name)
-	}
-}
-
 func (s *Stat) stats(container *docker.Container, stats *docker.Stats) error {
-	if s.Adapter == nil {
-		return nil
-	}
-
-	return s.Adapter.Stats(&Stats{
+	return s.adapter().Stats(&Stats{
 		Stats:     stats,
 		Container: container,
 	})
+}
+
+func (s *Stat) event(container *docker.Container, event *docker.APIEvents) error {
+	return s.adapter().Event(&Event{
+		APIEvents: event,
+		Container: container,
+	})
+}
+
+func (s *Stat) adapter() Adapter {
+	if s.Adapter == nil {
+		return DefaultAdapter
+	}
+
+	return s.Adapter
 }
 
 func newTicker(resolution int) *time.Ticker {
