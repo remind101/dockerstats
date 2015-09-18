@@ -1,4 +1,4 @@
-package dockerstats
+package stats
 
 // stat represents a single stat and is provided as the context to a
 import (
