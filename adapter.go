@@ -3,7 +3,6 @@ package stats
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strings"
 	"text/template"
 
@@ -14,12 +13,6 @@ var DefaultAdapter Adapter = &nullAdapter{}
 
 // L2MetTemplate is a template for outputing metrics as l2met samples.
 var L2MetTemplate = `{{.Type}}#{{.Name}}={{.Value}} source={{.Container.Name}}.{{.Hostname}}`
-
-var hostname string
-
-func init() {
-	hostname, _ = os.Hostname()
-}
 
 type nullAdapter struct{}
 
@@ -114,33 +107,6 @@ func (a *LogAdapter) Stats(stats *Stats) error {
 	w.sample("CPUStats.ThrottlingData.ThrottledTime", stats.CPUStats.ThrottlingData.ThrottledTime)
 
 	return nil
-}
-
-// stat represents a single stat and is provided as the context to a
-// template.
-type stat struct {
-	Container *docker.Container
-	Type      string
-	Name      string
-	Value     interface{}
-}
-
-func (s stat) Hostname() string {
-	return hostname
-}
-
-// Returns the first 12 characters of the container ID.
-func (s stat) ID() string {
-	return s.Container.ID[:12]
-}
-
-func (s stat) Env(key string) string {
-	for _, env := range s.Container.Config.Env {
-		if strings.HasPrefix(env, key+"=") {
-			return env[len(key)+1:]
-		}
-	}
-	return ""
 }
 
 type l2metWriter struct {
