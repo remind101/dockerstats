@@ -41,24 +41,7 @@ var eventList = map[string]bool{
 	"delete": false,
 }
 
-// Stats represents a set of stats from a container at a given point in time.
-type Stats struct {
-	*docker.Stats
-	Container *docker.Container
-}
-
-// Event represents an event for a container.
-type Event struct {
-	*docker.APIEvents
-	Container *docker.Container
-}
-
 // Adapter is an interface for draining stats and events somewhere.
-type OldAdapter interface {
-	Stats(*Stats) error
-	Event(*Event) error
-}
-
 type Adapter interface {
 	Sample(container *docker.Container, name string, value uint64)
 	Incr(container *docker.Container, name string, value uint64)
