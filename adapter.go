@@ -61,7 +61,7 @@ func (a *LogAdapter) write(c *docker.Container, typ, name string, value uint64) 
 }
 
 // StatsdTemplate defines the template used to render the statsd metric name.
-var StatsdTemplate = `{{.Name}}.source__{{.Container.Name}}__`
+var StatsdTemplate = `{{.Name}}.source__{{.Container.Name}}.{{.Hostname}}__`
 
 type StatsdAdapter struct {
 	client   *statsd.StatsdClient
