@@ -172,16 +172,14 @@ func (s *Stat) attachMetrics(container *docker.Container) {
 		// return which will drop this stats message.
 		select {
 		case <-ticker.C:
-			if err := s.stats(container, stat); err != nil {
-				debug("stats: err: %s", err)
-			}
+			s.stats(container, stat)
 		default:
 			// Drop the stat.
 		}
 	}
 }
 
-func (s *Stat) stats(container *docker.Container, stats *docker.Stats) error {
+func (s *Stat) stats(container *docker.Container, stats *docker.Stats) {
 	sample := func(name string, value uint64) {
 		s.adapter().Sample(container, name, value)
 	}
@@ -241,15 +239,10 @@ func (s *Stat) stats(container *docker.Container, stats *docker.Stats) error {
 	sample("CPUStats.ThrottlingData.Periods", stats.CPUStats.ThrottlingData.Periods)
 	sample("CPUStats.ThrottlingData.ThrottledPeriods", stats.CPUStats.ThrottlingData.ThrottledPeriods)
 	sample("CPUStats.ThrottlingData.ThrottledTime", stats.CPUStats.ThrottlingData.ThrottledTime)
-
-	return nil
 }
 
-// TODO remove return value
-func (s *Stat) event(container *docker.Container, event *docker.APIEvents) error {
+func (s *Stat) event(container *docker.Container, event *docker.APIEvents) {
 	s.adapter().Incr(container, fmt.Sprintf("Container.%s", strings.Title(event.Status)), 1)
-
-	return nil
 }
 
 func (s *Stat) adapter() Adapter {
