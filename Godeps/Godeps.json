@@ -20,6 +20,10 @@
 			"Rev": "b0f4fa94c14794e30cf3b9176e5dc4725d9552ed"
 		},
 		{
+			"ImportPath": "github.com/quipo/statsd",
+			"Rev": "b16c3be8a03e3c39a2d9c669b8f13f8876de61cd"
+		},
+		{
 			"ImportPath": "github.com/remind101/empire/pkg/dockerutil",
 			"Comment": "v0.9.0-137-g88b09a4",
 			"Rev": "88b09a48f32fe8c990b8a922b4c3aaeb1fd013ad"
