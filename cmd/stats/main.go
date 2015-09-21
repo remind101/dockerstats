@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 
 	"github.com/codegangsta/cli"
@@ -11,14 +12,9 @@ import (
 
 var flags = []cli.Flag{
 	cli.StringFlag{
-		Name:   "adapter",
-		Value:  "log",
-		EnvVar: "STAT_ADAPTER",
-	},
-	cli.StringFlag{
-		Name:   "statsd.address",
-		Value:  "localhost:8125",
-		EnvVar: "STATSD_ADDR",
+		Name:   "url",
+		Value:  "log://",
+		EnvVar: "STAT_URL",
 	},
 	cli.StringFlag{
 		Name:   "template",
@@ -58,13 +54,16 @@ func newAdapter(c *cli.Context) stats.Adapter {
 		err error
 	)
 
-	switch c.String("adapter") {
+	u, err := url.Parse(c.String("url"))
+	must(err)
+
+	switch u.Scheme {
 	case "log":
 		a, err = stats.NewLogAdapter(c.String("template"))
 	case "statsd":
-		a, err = stats.NewStatsdAdapter(c.String("statsd.address"), c.String("template"))
+		a, err = stats.NewStatsdAdapter(u.Host, c.String("template"))
 	default:
-		err = fmt.Errorf("unable to find an adapter matching: %s", c.String("adapter"))
+		err = fmt.Errorf("unable to find an adapter to handle: %s", c.String("url"))
 	}
 
 	must(err)
