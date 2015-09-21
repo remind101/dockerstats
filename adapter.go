@@ -3,11 +3,12 @@ package stats
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"math"
+	"os"
 	"text/template"
 
 	"github.com/fsouza/go-dockerclient"
-	"github.com/quipo/statsd"
 )
 
 var DefaultAdapter Adapter = &nullAdapter{}
@@ -23,13 +24,18 @@ func (a *nullAdapter) Sample(c *docker.Container, n string, v uint64) {}
 // LogAdapter is a drain that drains the metrics to stdout in l2met format.
 type LogAdapter struct {
 	template *template.Template
+	writer   io.Writer
 }
 
 // NewLogAdapter parses the template string as a text/template and returns a new
 // LogAdapter instance.
-func NewLogAdapter(tmpl string) (*LogAdapter, error) {
+func NewLogAdapter(tmpl string, w io.Writer) (*LogAdapter, error) {
 	if tmpl == "" {
 		tmpl = L2MetTemplate
+	}
+
+	if w == nil {
+		w = os.Stdout
 	}
 
 	t, err := template.New("stat").Parse(tmpl)
@@ -39,6 +45,7 @@ func NewLogAdapter(tmpl string) (*LogAdapter, error) {
 
 	return &LogAdapter{
 		template: t,
+		writer:   w,
 	}, nil
 }
 
@@ -57,20 +64,23 @@ func (a *LogAdapter) write(c *docker.Container, typ, name string, value uint64) 
 		Name:      name,
 		Value:     value,
 	}
-	fmt.Println(renderTemplate(a.template, data))
+	fmt.Fprintln(a.writer, renderTemplate(a.template, data))
 }
 
 // StatsdTemplate defines the template used to render the statsd metric name.
 var StatsdTemplate = `{{.Name}}.source__{{.Container.Name}}.{{.Hostname}}__`
 
+type StatsdClient interface {
+	Incr(name string, value int64) error
+	Gauge(name string, value int64) error
+}
+
 type StatsdAdapter struct {
-	client   *statsd.StatsdClient
+	client   StatsdClient
 	template *template.Template
 }
 
-func NewStatsdAdapter(addr string, tmpl string) (*StatsdAdapter, error) {
-	c := statsd.NewStatsdClient(addr, "")
-
+func NewStatsdAdapter(c StatsdClient, tmpl string) (*StatsdAdapter, error) {
 	if tmpl == "" {
 		tmpl = StatsdTemplate
 	}

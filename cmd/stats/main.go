@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/codegangsta/cli"
+	"github.com/quipo/statsd"
 	"github.com/remind101/dockerstats"
 )
 
@@ -59,9 +60,10 @@ func newAdapter(c *cli.Context) stats.Adapter {
 
 	switch u.Scheme {
 	case "log":
-		a, err = stats.NewLogAdapter(c.String("template"))
+		a, err = stats.NewLogAdapter(c.String("template"), nil)
 	case "statsd":
-		a, err = stats.NewStatsdAdapter(u.Host, c.String("template"))
+		client := statsd.NewStatsdClient(u.Host, "")
+		a, err = stats.NewStatsdAdapter(client, c.String("template"))
 	default:
 		err = fmt.Errorf("unable to find an adapter to handle: %s", c.String("url"))
 	}
