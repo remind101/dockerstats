@@ -41,22 +41,10 @@ var eventList = map[string]bool{
 	"delete": false,
 }
 
-// Stats represents a set of stats from a container at a given point in time.
-type Stats struct {
-	*docker.Stats
-	Container *docker.Container
-}
-
-// Event represents an event for a container.
-type Event struct {
-	*docker.APIEvents
-	Container *docker.Container
-}
-
 // Adapter is an interface for draining stats and events somewhere.
 type Adapter interface {
-	Stats(*Stats) error
-	Event(*Event) error
+	Sample(container *docker.Container, name string, value uint64)
+	Incr(container *docker.Container, name string, value uint64)
 }
 
 // Stat is a context struct that manages the lifecycle of container metrics. It
@@ -184,27 +172,77 @@ func (s *Stat) attachMetrics(container *docker.Container) {
 		// return which will drop this stats message.
 		select {
 		case <-ticker.C:
-			if err := s.stats(container, stat); err != nil {
-				debug("stats: err: %s", err)
-			}
+			s.stats(container, stat)
 		default:
 			// Drop the stat.
 		}
 	}
 }
 
-func (s *Stat) stats(container *docker.Container, stats *docker.Stats) error {
-	return s.adapter().Stats(&Stats{
-		Stats:     stats,
-		Container: container,
-	})
+func (s *Stat) stats(container *docker.Container, stats *docker.Stats) {
+	sample := func(name string, value uint64) {
+		s.adapter().Sample(container, name, value)
+	}
+
+	// Network
+	sample("Network.RxDropped", stats.Network.RxDropped)
+	sample("Network.RxBytes", stats.Network.RxBytes)
+	sample("Network.RxErrors", stats.Network.RxErrors)
+	sample("Network.TxPackets", stats.Network.TxPackets)
+	sample("Network.RxPackets", stats.Network.RxPackets)
+	sample("Network.TxErrors", stats.Network.TxErrors)
+	sample("Network.TxBytes", stats.Network.TxBytes)
+
+	// MemoryStats
+	sample("MemoryStats.Stats.TotalPgmafault", stats.MemoryStats.Stats.TotalPgmafault)
+	sample("MemoryStats.Stats.Cache", stats.MemoryStats.Stats.Cache)
+	sample("MemoryStats.Stats.MappedFile", stats.MemoryStats.Stats.MappedFile)
+	sample("MemoryStats.Stats.TotalInactiveFile", stats.MemoryStats.Stats.TotalInactiveFile)
+	sample("MemoryStats.Stats.Pgpgout", stats.MemoryStats.Stats.Pgpgout)
+	sample("MemoryStats.Stats.Rss", stats.MemoryStats.Stats.Rss)
+	sample("MemoryStats.Stats.TotalMappedFile", stats.MemoryStats.Stats.TotalMappedFile)
+	sample("MemoryStats.Stats.Writeback", stats.MemoryStats.Stats.Writeback)
+	sample("MemoryStats.Stats.Unevictable", stats.MemoryStats.Stats.Unevictable)
+	sample("MemoryStats.Stats.Pgpgin", stats.MemoryStats.Stats.Pgpgin)
+	sample("MemoryStats.Stats.TotalUnevictable", stats.MemoryStats.Stats.TotalUnevictable)
+	sample("MemoryStats.Stats.Pgmajfault", stats.MemoryStats.Stats.Pgmajfault)
+	sample("MemoryStats.Stats.TotalRss", stats.MemoryStats.Stats.TotalRss)
+	sample("MemoryStats.Stats.TotalRssHuge", stats.MemoryStats.Stats.TotalRssHuge)
+	sample("MemoryStats.Stats.TotalWriteback", stats.MemoryStats.Stats.TotalWriteback)
+	sample("MemoryStats.Stats.TotalInactiveAnon", stats.MemoryStats.Stats.TotalInactiveAnon)
+	sample("MemoryStats.Stats.RssHuge", stats.MemoryStats.Stats.RssHuge)
+	sample("MemoryStats.Stats.HierarchicalMemoryLimit", stats.MemoryStats.Stats.HierarchicalMemoryLimit)
+	sample("MemoryStats.Stats.TotalPgfault", stats.MemoryStats.Stats.TotalPgfault)
+	sample("MemoryStats.Stats.TotalActiveFile", stats.MemoryStats.Stats.TotalActiveFile)
+	sample("MemoryStats.Stats.ActiveAnon", stats.MemoryStats.Stats.ActiveAnon)
+	sample("MemoryStats.Stats.TotalActiveAnon", stats.MemoryStats.Stats.TotalActiveAnon)
+	sample("MemoryStats.Stats.TotalPgpgout", stats.MemoryStats.Stats.TotalPgpgout)
+	sample("MemoryStats.Stats.TotalCache", stats.MemoryStats.Stats.TotalCache)
+	sample("MemoryStats.Stats.InactiveAnon", stats.MemoryStats.Stats.InactiveAnon)
+	sample("MemoryStats.Stats.ActiveFile", stats.MemoryStats.Stats.ActiveFile)
+	sample("MemoryStats.Stats.Pgfault", stats.MemoryStats.Stats.Pgfault)
+	sample("MemoryStats.Stats.InactiveFile", stats.MemoryStats.Stats.InactiveFile)
+	sample("MemoryStats.Stats.TotalPgpgin", stats.MemoryStats.Stats.TotalPgpgin)
+	sample("MemoryStats.MaxUsage", stats.MemoryStats.MaxUsage)
+	sample("MemoryStats.Usage", stats.MemoryStats.Usage)
+	sample("MemoryStats.Failcnt", stats.MemoryStats.Failcnt)
+	sample("MemoryStats.Limit", stats.MemoryStats.Limit)
+
+	// CPUStats
+	for i, v := range stats.CPUStats.CPUUsage.PercpuUsage {
+		sample(fmt.Sprintf("CPUStats.CPUUsage.PercpuUsage.%d", i), v)
+	}
+	sample("CPUStats.CPUUsage.UsageInUsermode", stats.CPUStats.CPUUsage.UsageInUsermode)
+	sample("CPUStats.CPUUsage.TotalUsage", stats.CPUStats.CPUUsage.TotalUsage)
+	sample("CPUStats.CPUUsage.UsageInKernelmode", stats.CPUStats.CPUUsage.UsageInKernelmode)
+	sample("CPUStats.SystemCPUUsage", stats.CPUStats.SystemCPUUsage)
+	sample("CPUStats.ThrottlingData.Periods", stats.CPUStats.ThrottlingData.Periods)
+	sample("CPUStats.ThrottlingData.ThrottledPeriods", stats.CPUStats.ThrottlingData.ThrottledPeriods)
+	sample("CPUStats.ThrottlingData.ThrottledTime", stats.CPUStats.ThrottlingData.ThrottledTime)
 }
 
-func (s *Stat) event(container *docker.Container, event *docker.APIEvents) error {
-	return s.adapter().Event(&Event{
-		APIEvents: event,
-		Container: container,
-	})
+func (s *Stat) event(container *docker.Container, event *docker.APIEvents) {
+	s.adapter().Incr(container, fmt.Sprintf("Container.%s", strings.Title(event.Status)), 1)
 }
 
 func (s *Stat) adapter() Adapter {
