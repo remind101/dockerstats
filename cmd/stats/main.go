@@ -22,6 +22,11 @@ var flags = []cli.Flag{
 		Value:  stats.L2MetTemplate,
 		EnvVar: "STAT_TEMPLATE",
 	},
+	cli.StringSliceFlag{
+		Name:   "whitelist",
+		Value:  &cli.StringSlice{},
+		EnvVar: "STAT_WHITELIST",
+	},
 	cli.IntFlag{
 		Name:   "resolution",
 		Value:  stats.DefaultResolution,
@@ -44,6 +49,7 @@ func run(c *cli.Context) {
 
 	stat.Adapter = newAdapter(c)
 	stat.Resolution = c.Int("resolution")
+	stat.Whitelist = c.StringSlice("whitelist")
 
 	err = stat.Run()
 	must(err)
