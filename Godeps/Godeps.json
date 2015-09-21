@@ -20,6 +20,10 @@
 			"Rev": "b0f4fa94c14794e30cf3b9176e5dc4725d9552ed"
 		},
 		{
+			"ImportPath": "github.com/mb0/glob",
+			"Rev": "4312440cf66256264db33209a01e637873017f2b"
+		},
+		{
 			"ImportPath": "github.com/quipo/statsd",
 			"Rev": "b16c3be8a03e3c39a2d9c669b8f13f8876de61cd"
 		},

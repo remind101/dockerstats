@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/fsouza/go-dockerclient"
+	"github.com/mb0/glob"
 	"github.com/remind101/empire/pkg/dockerutil"
 )
 
@@ -59,6 +60,10 @@ type Stat struct {
 	// tick will be dropped. Throttling is on a per container basis. The
 	// zero value is DefaultResolution.
 	Resolution int
+
+	// Whitelist is a list of stats to output to the adapter. An empty whitelist
+	// will include all stats. Whitelisted stats can use `*` for wildcard matches.
+	Whitelist []string
 
 	mu         sync.Mutex
 	containers map[string]*docker.Container
@@ -181,7 +186,9 @@ func (s *Stat) attachMetrics(container *docker.Container) {
 
 func (s *Stat) stats(container *docker.Container, stats *docker.Stats) {
 	sample := func(name string, value uint64) {
-		s.adapter().Sample(container, name, value)
+		if s.whitelisted(name) {
+			s.adapter().Sample(container, name, value)
+		}
 	}
 
 	// Network
@@ -251,6 +258,20 @@ func (s *Stat) adapter() Adapter {
 	}
 
 	return s.Adapter
+}
+
+func (s *Stat) whitelisted(name string) bool {
+	if len(s.Whitelist) == 0 {
+		return true
+	}
+
+	for _, pattern := range s.Whitelist {
+		if ok, _ := glob.Match(pattern, name); ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 func newTicker(resolution int) *time.Ticker {
