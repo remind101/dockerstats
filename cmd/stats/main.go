@@ -69,6 +69,8 @@ func newAdapter(c *cli.Context) stats.Adapter {
 		a, err = stats.NewLogAdapter(c.String("template"), nil)
 	case "statsd":
 		client := statsd.NewStatsdClient(u.Host, "")
+		err = client.CreateSocket()
+		must(err)
 		a, err = stats.NewStatsdAdapter(client, c.String("template"))
 	default:
 		err = fmt.Errorf("unable to find an adapter to handle: %s", c.String("url"))
